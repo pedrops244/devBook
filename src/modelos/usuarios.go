@@ -28,13 +28,13 @@ func (usuario *Usuario) validar() error {
 		return errors.New("o nome é obrigatório e não pode estar em branco")
 	}
 	if usuario.Nick == "" {
-		return errors.New("o nome é obrigatório e não pode estar em branco")
+		return errors.New("o nick é obrigatório e não pode estar em branco")
 	}
 	if usuario.Email == "" {
-		return errors.New("o nome é obrigatório e não pode estar em branco")
+		return errors.New("o e-mail é obrigatório e não pode estar em branco")
 	}
 	if usuario.Senha == "" {
-		return errors.New("o nome é obrigatório e não pode estar em branco")
+		return errors.New("a senha é obrigatório e não pode estar em branco")
 	}
 
 	return nil
