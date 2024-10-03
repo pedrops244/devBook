@@ -11,7 +11,8 @@ import (
 
 var (
 	StringConexaoBanco = ""
-	Porta              = 03
+	Porta              = 0
+	SecretKey          []byte
 )
 
 func Carregar() {
@@ -31,4 +32,6 @@ func Carregar() {
 		os.Getenv("DB_SENHA"),
 		os.Getenv("DB_NOME"),
 	)
+
+	SecretKey = []byte(os.Getenv("JWT_SECRET"))
 }
