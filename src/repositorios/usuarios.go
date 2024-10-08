@@ -147,5 +147,17 @@ func (repositorio usuarios) Seguir(usuarioId, seguidorId uint64) error {
 	}
 
 	return nil
+}
 
+func (repositorios usuarios) PararDeSeguir(usuarioId, seguidorId uint64) error {
+	statement, erro := repositorios.db.Prepare("delete from seguidores where usuario_id = ? and seguidor_id = ?")
+	if erro != nil {
+		return erro
+	}
+
+	if _, erro = statement.Exec(usuarioId, seguidorId); erro != nil {
+		return erro
+	}
+
+	return nil
 }
