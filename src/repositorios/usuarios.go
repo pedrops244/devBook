@@ -154,10 +154,67 @@ func (repositorios usuarios) PararDeSeguir(usuarioId, seguidorId uint64) error {
 	if erro != nil {
 		return erro
 	}
+	defer statement.Close()
 
 	if _, erro = statement.Exec(usuarioId, seguidorId); erro != nil {
 		return erro
 	}
 
 	return nil
+}
+
+func (repositorio usuarios) BuscarSeguidores(usuarioId uint64) ([]modelos.Usuario, error) {
+	linhas, erro := repositorio.db.Query(`
+		select u.id, u.nome, u.nick, u.email, u.criadoEm
+		from usuarios u inner join seguidores s on u.id = s.seguidor_id where s.usuario_id = ?
+	`, usuarioId)
+	if erro != nil {
+		return nil, erro
+	}
+	defer linhas.Close()
+
+	var usuarios []modelos.Usuario
+	for linhas.Next() {
+		var usuario modelos.Usuario
+
+		if erro = linhas.Scan(
+			&usuario.ID,
+			&usuario.Nome,
+			&usuario.Nick,
+			&usuario.Email,
+			&usuario.CriadoEm,
+		); erro != nil {
+			return nil, erro
+		}
+		usuarios = append(usuarios, usuario)
+	}
+	return usuarios, nil
+}
+
+func (repositorio usuarios) BuscarSeguindo(usuarioId uint64) ([]modelos.Usuario, error) {
+	linhas, erro := repositorio.db.Query(`
+	select u.id, u.nome, u.nick, u.email, u.criadoEm
+	from usuarios u inner join seguidores s on u.id = s.usuario_id where s.seguidor_id = ?`, usuarioId,
+	)
+	if erro != nil {
+		return nil, erro
+	}
+	defer linhas.Close()
+	var usuarios []modelos.Usuario
+
+	for linhas.Next() {
+		var usuario modelos.Usuario
+
+		if erro = linhas.Scan(
+			&usuario.ID,
+			&usuario.Nome,
+			&usuario.Nick,
+			&usuario.Email,
+			&usuario.CriadoEm,
+		); erro != nil {
+			return nil, erro
+		}
+		usuarios = append(usuarios, usuario)
+	}
+	return usuarios, nil
 }
