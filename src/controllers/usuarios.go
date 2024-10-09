@@ -348,7 +348,7 @@ func AtualizarSenha(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if erro = seguranca.VerificarSenha(senhaSalvaNoBanco, senha.Atual); erro != nil {
-		respostas.Erro(w, http.StatusUnauthorized, errors.New("a senha atual não conduz com a salva no banco"))
+		respostas.Erro(w, http.StatusUnauthorized, errors.New("a senha atual não condiz com a salva no banco"))
 		return
 	}
 
