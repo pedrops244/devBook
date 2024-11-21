@@ -5,17 +5,14 @@ import (
 	"errors"
 	"strings"
 	"time"
-
-	"github.com/badoux/checkmail"
 )
 
 type Usuario struct {
 	ID       uint      `json:"id,omitempty"`
-	Nome     string    `json:"nome,omitempty"`
-	Nick     string    `json:"nick,omitempty"`
-	Email    string    `json:"email,omitempty"`
+	Username string    `json:"username,omitempty"`
 	Senha    string    `json:"senha,omitempty"`
-	CriadoEm time.Time `json:"CriandoEm,omitempty"`
+	Role     string    `json:"role,omitempty"`
+	CriadoEm time.Time `json:"criadoEm,omitempty"`
 }
 
 func (usuario *Usuario) Preparar(etapa string) error {
@@ -29,18 +26,11 @@ func (usuario *Usuario) Preparar(etapa string) error {
 }
 
 func (usuario *Usuario) validar(etapa string) error {
-	if usuario.Nome == "" {
-		return errors.New("o nome é obrigatório e não pode estar em branco")
+	if usuario.Username == "" {
+		return errors.New("o username é obrigatório e não pode estar em branco")
 	}
-	if usuario.Nick == "" {
-		return errors.New("o nick é obrigatório e não pode estar em branco")
-	}
-	if usuario.Email == "" {
-		return errors.New("o e-mail é obrigatório e não pode estar em branco")
-	}
-
-	if erro := checkmail.ValidateFormat(usuario.Email); erro != nil {
-		return errors.New("o e-email inserido é inválido")
+	if usuario.Role != "vendedor" && usuario.Role != "repositor" {
+		return errors.New("a role é obrigatória e não pode ser diferente de vendedor ou repositor")
 	}
 
 	if etapa == "cadastro" && usuario.Senha == "" {
@@ -51,9 +41,7 @@ func (usuario *Usuario) validar(etapa string) error {
 }
 
 func (usuario *Usuario) formatar(etapa string) error {
-	usuario.Nome = strings.TrimSpace(usuario.Nome)
-	usuario.Nick = strings.TrimSpace(usuario.Nick)
-	usuario.Email = strings.TrimSpace(usuario.Email)
+	usuario.Username = strings.TrimSpace(usuario.Username)
 
 	if etapa == "cadastro" {
 		senhaComHash, erro := seguranca.Hash(usuario.Senha)

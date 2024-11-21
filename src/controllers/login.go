@@ -35,7 +35,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
-	usuarioSalvoNoBanco, erro := repositorio.BuscarPorEmail(usuario.Email)
+	usuarioSalvoNoBanco, erro := repositorio.BuscarPorUsername(usuario.Username)
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
@@ -45,8 +45,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		respostas.Erro(w, http.StatusUnauthorized, erro)
 		return
 	}
-
-	token, erro := auth.CriarToken(usuarioSalvoNoBanco.ID)
+	token, erro := auth.CriarToken(usuarioSalvoNoBanco.ID, usuarioSalvoNoBanco.Role)
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return

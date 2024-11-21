@@ -27,11 +27,14 @@ func Carregar() {
 		Porta = 9000
 	}
 
-	StringConexaoBanco = fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=True&loc=Local",
-		os.Getenv("DB_USUARIO"),
-		os.Getenv("DB_SENHA"),
-		os.Getenv("DB_NOME"),
-	)
+	// StringConexaoBanco = fmt.Sprintf("sqlserver://%s:%s@%s:%s?database=%s&encrypt=disable",
+	// 	os.Getenv("DB_USUARIO"),
+	// 	os.Getenv("DB_SENHA"),
+	// 	os.Getenv("DB_HOST"),
+	// 	os.Getenv("DB_NOME"),
+	// )
+
+	StringConexaoBanco = fmt.Sprintf("sqlserver://%s?database=%s&encrypt=disable&trusted_connection=true", os.Getenv("DB_HOST"), os.Getenv("DB_NOME"))
 
 	SecretKey = []byte(os.Getenv("JWT_SECRET"))
 }
