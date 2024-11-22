@@ -8,6 +8,7 @@ import (
 	"api/src/respostas"
 	"api/src/seguranca"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -26,6 +27,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		respostas.Erro(w, http.StatusBadRequest, erro)
 		return
 	}
+	fmt.Println(usuario)
 
 	db, erro := banco.Conectar()
 	if erro != nil {
@@ -53,5 +55,5 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	usuarioId := strconv.FormatUint(uint64(usuarioSalvoNoBanco.ID), 10)
 
-	respostas.JSON(w, http.StatusOK, modelos.DadosAutenticacao{ID: usuarioId, Token: token})
+	respostas.JSON(w, http.StatusOK, modelos.DadosAutenticacao{ID: usuarioId, Token: token, Role: usuarioSalvoNoBanco.Role})
 }
