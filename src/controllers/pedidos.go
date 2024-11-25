@@ -140,3 +140,48 @@ func AtualizarStatusPedido(w http.ResponseWriter, r *http.Request) {
 
 	respostas.JSON(w, http.StatusNoContent, nil)
 }
+
+func AtualizarQuantidadeConferida(w http.ResponseWriter, r *http.Request) {
+	parametros := mux.Vars(r)
+	pedidoID, err := strconv.ParseUint(parametros["pedidoID"], 10, 64)
+	if err != nil {
+		respostas.Erro(w, http.StatusBadRequest, err)
+		return
+	}
+
+	var dados struct {
+		Codigo string `json:"codigo"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&dados); err != nil {
+		respostas.Erro(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := banco.Conectar()
+	if err != nil {
+		respostas.Erro(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer db.Close()
+
+	repositorio := repositorios.NovoRepositorioDePedidos(db)
+	pedido, err := repositorio.BuscarPorID(uint(pedidoID))
+	if err != nil {
+		respostas.Erro(w, http.StatusNotFound, err)
+		return
+	}
+
+	for i, item := range pedido.Itens {
+		if item.Codigo == dados.Codigo {
+			pedido.Itens[i].QuantidadeConferida++
+			break
+		}
+	}
+
+	if err := repositorio.AtualizarPedido(pedido); err != nil {
+		respostas.Erro(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	respostas.JSON(w, http.StatusOK, pedido)
+}

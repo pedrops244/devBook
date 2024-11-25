@@ -26,9 +26,9 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 
 	// Inserir o pedido
 	queryPedido := `
-		INSERT INTO Pedidos (Status, DataCriacao)
+		INSERT INTO Pedidos (Status, CriadoEm)
 		OUTPUT INSERTED.ID
-		VALUES (@Status, @DataCriacao)
+		VALUES (@Status, @CriadoEm)
 	`
 	stmtPedido, err := tx.Prepare(queryPedido)
 	if err != nil {
@@ -40,7 +40,7 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 	var pedidoID uint
 	err = stmtPedido.QueryRow(
 		sql.Named("Status", pedido.Status),
-		sql.Named("DataCriacao", pedido.DataCriacao),
+		sql.Named("CriadoEm", pedido.CriadoEm),
 	).Scan(&pedidoID)
 	if err != nil {
 		tx.Rollback()
@@ -90,13 +90,13 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 // BuscarPorID retorna um pedido com seus itens
 func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 	queryPedido := `
-		SELECT ID, Status, DataCriacao
+		SELECT ID, Status, CriadoEm
 		FROM Pedidos
 		WHERE ID = @ID
 	`
 	var pedido modelos.Pedido
 	err := repositorio.db.QueryRow(queryPedido, sql.Named("ID", id)).
-		Scan(&pedido.ID, &pedido.Status, &pedido.DataCriacao)
+		Scan(&pedido.ID, &pedido.Status, &pedido.CriadoEm)
 	if err == sql.ErrNoRows {
 		return pedido, errors.New("pedido não encontrado")
 	} else if err != nil {
@@ -154,7 +154,7 @@ func (repositorio pedidos) AtualizarStatus(pedidoID uint, status string) error {
 // Listar retorna todos os pedidos com seus itens
 func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	queryPedidos := `
-		SELECT ID, Status, DataCriacao
+		SELECT ID, Status, CriadoEm
 		FROM Pedidos
 	`
 	rows, err := repositorio.db.Query(queryPedidos)
@@ -166,7 +166,7 @@ func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	var pedidos []modelos.Pedido
 	for rows.Next() {
 		var pedido modelos.Pedido
-		if err := rows.Scan(&pedido.ID, &pedido.Status, &pedido.DataCriacao); err != nil {
+		if err := rows.Scan(&pedido.ID, &pedido.Status, &pedido.CriadoEm); err != nil {
 			return nil, err
 		}
 
@@ -210,4 +210,40 @@ func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPe
 		itens = append(itens, item)
 	}
 	return itens, nil
+}
+
+func (repositorio pedidos) AtualizarPedido(pedido modelos.Pedido) error {
+	// Iniciar uma transação
+	tx, err := repositorio.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Atualizar o pedido (status, data, etc.)
+	_, err = tx.Exec(`
+		UPDATE pedidos
+		SET status = ?, atualizado_em = NOW()
+		WHERE id = ?`, pedido.Status, pedido.ID)
+	if err != nil {
+		return err
+	}
+
+	// Atualizar os itens do pedido
+	for _, item := range pedido.Itens {
+		_, err := tx.Exec(`
+			UPDATE itens_pedidos
+			SET quantidade_conferida = ?
+			WHERE pedido_id = ? AND codigo = ?`, item.QuantidadeConferida, pedido.ID, item.Codigo)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Comitar a transação
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
 }
