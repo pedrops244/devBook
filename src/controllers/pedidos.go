@@ -96,35 +96,37 @@ func ListarPedidos(w http.ResponseWriter, r *http.Request) {
 	respostas.JSON(w, http.StatusOK, pedidos)
 }
 
-// AtualizarStatusPedido atualiza o status de um pedido
-func AtualizarStatusPedido(w http.ResponseWriter, r *http.Request) {
+// ConfirmarRecebimento atualiza a QuandidadeConferida no banco
+func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
+	// Captura o ID do pedido
 	parametros := mux.Vars(r)
 	pedidoID, err := strconv.ParseUint(parametros["pedidoID"], 10, 64)
 	if err != nil {
-		respostas.Erro(w, http.StatusBadRequest, err)
+		respostas.Erro(w, http.StatusBadRequest, errors.New("id do pedido inválido"))
 		return
 	}
 
+	// Lê o corpo da requisição
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		respostas.Erro(w, http.StatusBadRequest, err)
+		respostas.Erro(w, http.StatusUnprocessableEntity, errors.New("erro ao ler o corpo da requisição"))
 		return
 	}
 	defer r.Body.Close()
 
-	var dados struct {
-		Status string `json:"status"`
+	// Mapeia os dados recebidos
+	var pedido modelos.Pedido
+	if err := json.Unmarshal(body, &pedido); err != nil {
+		respostas.Erro(w, http.StatusBadRequest, errors.New("dados inválidos"))
+		return
 	}
-	if err := json.Unmarshal(body, &dados); err != nil {
+
+	if err := pedido.Validar(); err != nil {
 		respostas.Erro(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if dados.Status == "" {
-		respostas.Erro(w, http.StatusBadRequest, errors.New("o status não pode ser vazio"))
-		return
-	}
-
+	// Conecta ao banco
 	db, erro := banco.Conectar()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
@@ -132,56 +134,14 @@ func AtualizarStatusPedido(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
+	// Cria o repositório e atualiza os dados
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
-	if erro := repositorio.AtualizarStatus(uint(pedidoID), dados.Status); erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
-		return
-	}
-
-	respostas.JSON(w, http.StatusNoContent, nil)
-}
-
-func AtualizarQuantidadeConferida(w http.ResponseWriter, r *http.Request) {
-	parametros := mux.Vars(r)
-	pedidoID, err := strconv.ParseUint(parametros["pedidoID"], 10, 64)
-	if err != nil {
-		respostas.Erro(w, http.StatusBadRequest, err)
-		return
-	}
-
-	var dados struct {
-		Codigo string `json:"codigo"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&dados); err != nil {
-		respostas.Erro(w, http.StatusBadRequest, err)
-		return
-	}
-
-	db, err := banco.Conectar()
+	err = repositorio.AtualizarRecebimento(uint(pedidoID), pedido)
 	if err != nil {
 		respostas.Erro(w, http.StatusInternalServerError, err)
 		return
 	}
-	defer db.Close()
 
-	repositorio := repositorios.NovoRepositorioDePedidos(db)
-	pedido, err := repositorio.BuscarPorID(uint(pedidoID))
-	if err != nil {
-		respostas.Erro(w, http.StatusNotFound, err)
-		return
-	}
-
-	for i, item := range pedido.Itens {
-		if item.Codigo == dados.Codigo {
-			pedido.Itens[i].QuantidadeConferida++
-			break
-		}
-	}
-
-	if err := repositorio.AtualizarPedido(pedido); err != nil {
-		respostas.Erro(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	respostas.JSON(w, http.StatusOK, pedido)
+	// Retorna sucesso
+	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Recebimento confirmado com sucesso"})
 }

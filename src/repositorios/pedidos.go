@@ -51,8 +51,8 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 	// Inserir os itens do pedido
 	queryItem := `
 		INSERT INTO ItensPedidos 
-		(PedidoID, QuantidadeSolicitada, QuantidadeConferida, QuantidadeAprovada, Codigo)
-		VALUES (@PedidoID, @QuantidadeSolicitada, @QuantidadeConferida, @QuantidadeAprovada, @Codigo)
+		(PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo)
+		VALUES (@PedidoID, @QuantidadeSolicitada, @QuantidadeRecebida, @QuantidadeConferida, @Codigo)
 	`
 	stmtItem, err := tx.Prepare(queryItem)
 	if err != nil {
@@ -66,8 +66,8 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 		_, err := stmtItem.Exec(
 			sql.Named("PedidoID", pedidoID),
 			sql.Named("QuantidadeSolicitada", item.QuantidadeSolicitada),
+			sql.Named("QuantidadeRecebida", 0),
 			sql.Named("QuantidadeConferida", 0),
-			sql.Named("QuantidadeAprovada", 0),
 			sql.Named("Codigo", item.Codigo),
 		)
 		if err != nil {
@@ -105,7 +105,7 @@ func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 
 	// Buscar os itens associados ao pedido
 	queryItens := `
-		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeConferida, QuantidadeAprovada, Codigo
+		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo
 		FROM ItensPedidos
 		WHERE PedidoID = @PedidoID
 	`
@@ -122,8 +122,8 @@ func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 			&item.ID,
 			&item.PedidoID,
 			&item.QuantidadeSolicitada,
+			&item.QuantidadeRecebida,
 			&item.QuantidadeConferida,
-			&item.QuantidadeAprovada,
 			&item.Codigo,
 		); err != nil {
 			return pedido, err
@@ -132,23 +132,6 @@ func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 	}
 	pedido.Itens = itens
 	return pedido, nil
-}
-
-// AtualizarStatus atualiza o status de um pedido
-func (repositorio pedidos) AtualizarStatus(pedidoID uint, status string) error {
-	query := `
-		UPDATE Pedidos
-		SET Status = @Status
-		WHERE ID = @PedidoID
-	`
-	stmt, err := repositorio.db.Prepare(query)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(sql.Named("Status", status), sql.Named("PedidoID", pedidoID))
-	return err
 }
 
 // Listar retorna todos os pedidos com seus itens
@@ -184,7 +167,7 @@ func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 // BuscarItensDoPedido retorna os itens associados a um pedido específico
 func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPedido, error) {
 	query := `
-		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeConferida, QuantidadeAprovada, Codigo
+		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo
 		FROM ItensPedidos
 		WHERE PedidoID = @PedidoID
 	`
@@ -201,8 +184,8 @@ func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPe
 			&item.ID,
 			&item.PedidoID,
 			&item.QuantidadeSolicitada,
+			&item.QuantidadeRecebida,
 			&item.QuantidadeConferida,
-			&item.QuantidadeAprovada,
 			&item.Codigo,
 		); err != nil {
 			return nil, err
@@ -212,35 +195,50 @@ func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPe
 	return itens, nil
 }
 
-func (repositorio pedidos) AtualizarPedido(pedido modelos.Pedido) error {
-	// Iniciar uma transação
+func (repositorio pedidos) AtualizarRecebimento(pedidoID uint, pedido modelos.Pedido) error {
 	tx, err := repositorio.db.Begin()
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
 
-	// Atualizar o pedido (status, data, etc.)
-	_, err = tx.Exec(`
-		UPDATE pedidos
-		SET status = ?, atualizado_em = NOW()
-		WHERE id = ?`, pedido.Status, pedido.ID)
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	query := `
+		UPDATE Pedidos
+		SET Status = @Status, RecebidoEm = @RecebidoEm
+		WHERE ID = @PedidoID
+	`
+
+	_, err = tx.Exec(
+		query,
+		sql.Named("Status", pedido.Status),
+		sql.Named("RecebidoEm", pedido.RecebidoEm),
+		sql.Named("PedidoID", pedidoID),
+	)
 	if err != nil {
 		return err
 	}
 
-	// Atualizar os itens do pedido
-	for _, item := range pedido.Itens {
-		_, err := tx.Exec(`
-			UPDATE itens_pedidos
-			SET quantidade_conferida = ?
-			WHERE pedido_id = ? AND codigo = ?`, item.QuantidadeConferida, pedido.ID, item.Codigo)
+	queryItem := `
+	UPDATE ItensPedidos
+	SET QuantidadeRecebida = @QuantidadeRecebida
+	WHERE PedidoID = @PedidoID AND Codigo = @Codigo
+`
+	for _, itemRecebido := range pedido.Itens {
+		_, err = tx.Exec(
+			queryItem,
+			sql.Named("QuantidadeRecebida", itemRecebido.QuantidadeRecebida),
+			sql.Named("PedidoID", pedidoID),
+			sql.Named("Codigo", itemRecebido.Codigo),
+		)
 		if err != nil {
 			return err
 		}
 	}
-
-	// Comitar a transação
 	if err := tx.Commit(); err != nil {
 		return err
 	}

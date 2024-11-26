@@ -17,10 +17,8 @@ func Conectar() (*sql.DB, error) {
 
 	if erro = db.Ping(); erro != nil {
 		db.Close()
-		log.Printf("Erro ao tentar conectar (Ping): %v\n", erro)
+		log.Printf("Erro ao tentar conectar: %v\n", erro)
 		return nil, erro
 	}
-
-	log.Println("Conexão com o banco de dados estabelecida com sucesso!")
 	return db, nil
 }

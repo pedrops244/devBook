@@ -16,10 +16,13 @@ CREATE TABLE usuarios (
 CREATE TABLE Pedidos (
     ID INT IDENTITY PRIMARY KEY,
     Status NVARCHAR(50) NOT NULL, -- Ex.: 'Em andamento', 'Enviado', 'Conferido'
-    DataCriacao DATETIME DEFAULT GETDATE(), -- Data e hora da criação do pedido
+    CriadoEm DATETIME DEFAULT GETDATE(), -- Data e hora da criação do pedido
+    RecebidoEm DATETIME NULL, -- Data e hora em que o pedido foi recebido
+    ConferidoEm DATETIME NULL, -- Data e hora em que o pedido foi conferido
     UsuarioID INT NOT NULL, -- ID do usuário que criou o pedido
     CONSTRAINT FK_Pedidos_Usuario FOREIGN KEY (UsuarioID) REFERENCES Usuarios(ID)
 );
+
 
 
 CREATE TABLE ItensPedidos (
@@ -27,7 +30,7 @@ CREATE TABLE ItensPedidos (
     PedidoID INT NOT NULL, -- Relacionamento com a tabela Pedidos
     Codigo NVARCHAR(50) NOT NULL, -- Código de barras do produto
     QuantidadeSolicitada INT NOT NULL,
+    QuantidadeRecebida INT DEFAULT 0, 
     QuantidadeConferida INT DEFAULT 0, 
-    QuantidadeAprovada INT DEFAULT 0, 
     CONSTRAINT FK_ItensPedidos_Pedidos FOREIGN KEY (PedidoID) REFERENCES Pedidos(ID)
 );

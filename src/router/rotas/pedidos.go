@@ -25,9 +25,9 @@ var rotasPedidos = []Rota{
 		RequerAutenticacao: true,
 	},
 	{
-		Uri:                "/pedidos/{pedidoID}/status",
-		Metodo:             http.MethodPut,
-		Funcao:             controllers.AtualizarStatusPedido,
+		Uri:                "/pedidos/{pedidoID}/receber-produtos",
+		Metodo:             http.MethodPost,
+		Funcao:             controllers.ConfirmarRecebimento,
 		RequerAutenticacao: true,
 	},
 }

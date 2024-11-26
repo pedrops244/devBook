@@ -20,7 +20,7 @@ func NovoRepositorioDeItensPedidos(db *sql.DB) *ItensPedidosRepositorio {
 func (repositorio *ItensPedidosRepositorio) Adicionar(item modelos.ItensPedido) (int64, error) {
 	query := `
 		INSERT INTO ItensPedidos 
-		(PedidoID, QuantidadeSolicitada, QuantidadeConferida, QuantidadeAprovada, Codigo)
+		(PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo)
 		OUTPUT INSERTED.ID
 		VALUES (@PedidoID, @QuantidadeSolicitada, 0, 0, @Codigo)
 	`
@@ -45,7 +45,7 @@ func (repositorio *ItensPedidosRepositorio) Adicionar(item modelos.ItensPedido) 
 // BuscarPorPedido retorna todos os itens associados a um pedido
 func (repositorio *ItensPedidosRepositorio) BuscarPorPedido(pedidoID uint) ([]modelos.ItensPedido, error) {
 	query := `
-		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeConferida, QuantidadeAprovada, Codigo
+		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo
 		FROM ItensPedidos
 		WHERE PedidoID = @PedidoID
 	`
@@ -62,8 +62,8 @@ func (repositorio *ItensPedidosRepositorio) BuscarPorPedido(pedidoID uint) ([]mo
 			&item.ID,
 			&item.PedidoID,
 			&item.QuantidadeSolicitada,
+			&item.QuantidadeRecebida,
 			&item.QuantidadeConferida,
-			&item.QuantidadeAprovada,
 			&item.Codigo,
 		); err != nil {
 			return nil, err
@@ -71,40 +71,6 @@ func (repositorio *ItensPedidosRepositorio) BuscarPorPedido(pedidoID uint) ([]mo
 		itens = append(itens, item)
 	}
 	return itens, nil
-}
-
-// AtualizarQuantidadeConferida atualiza a quantidade conferida de um item
-func (repositorio *ItensPedidosRepositorio) AtualizarQuantidadeConferida(itemID uint, quantidade int) error {
-	query := `
-		UPDATE ItensPedidos
-		SET QuantidadeConferida = @Quantidade
-		WHERE ID = @ItemID
-	`
-	stmt, err := repositorio.db.Prepare(query)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(sql.Named("Quantidade", quantidade), sql.Named("ItemID", itemID))
-	return err
-}
-
-// AtualizarQuantidadeAprovada atualiza a quantidade aprovada de um item
-func (repositorio *ItensPedidosRepositorio) AtualizarQuantidadeAprovada(itemID uint, quantidade int) error {
-	query := `
-		UPDATE ItensPedidos
-		SET QuantidadeAprovada = @Quantidade
-		WHERE ID = @ItemID
-	`
-	stmt, err := repositorio.db.Prepare(query)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(sql.Named("Quantidade", quantidade), sql.Named("ItemID", itemID))
-	return err
 }
 
 // DeletarPorPedido remove todos os itens de um pedido
@@ -126,7 +92,7 @@ func (repositorio *ItensPedidosRepositorio) DeletarPorPedido(pedidoID uint) erro
 // BuscarPorID busca um item específico pelo ID
 func (repositorio *ItensPedidosRepositorio) BuscarPorID(itemID uint) (modelos.ItensPedido, error) {
 	query := `
-		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeConferida, QuantidadeAprovada, Codigo
+		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo
 		FROM ItensPedidos
 		WHERE ID = @ItemID
 	`
@@ -136,8 +102,8 @@ func (repositorio *ItensPedidosRepositorio) BuscarPorID(itemID uint) (modelos.It
 			&item.ID,
 			&item.PedidoID,
 			&item.QuantidadeSolicitada,
+			&item.QuantidadeRecebida,
 			&item.QuantidadeConferida,
-			&item.QuantidadeAprovada,
 			&item.Codigo,
 		)
 	if err == sql.ErrNoRows {
