@@ -29,8 +29,8 @@ func (usuario *Usuario) validar(etapa string) error {
 	if usuario.Username == "" {
 		return errors.New("o username é obrigatório e não pode estar em branco")
 	}
-	if usuario.Role != "vendedor" && usuario.Role != "repositor" {
-		return errors.New("a role é obrigatória e não pode ser diferente de vendedor ou repositor")
+	if usuario.Role != "comprador" && usuario.Role != "repositor" && usuario.Role != "gerente" {
+		return errors.New("a role é obrigatória e não pode ser diferente de comprador, repositor ou gerente")
 	}
 
 	if etapa == "cadastro" && usuario.Senha == "" {

@@ -242,3 +242,53 @@ func (repositorio pedidos) AtualizarRecebimento(pedidoID uint, pedido modelos.Pe
 
 	return nil
 }
+
+func (repositorio pedidos) AtualizarConferencia(pedidoID uint, pedido modelos.Pedido) error {
+	tx, err := repositorio.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	query := `
+		UPDATE Pedidos
+		SET Status = @Status, ConferidoEm = @ConferidoEm
+		WHERE ID = @PedidoID
+	`
+	_, err = tx.Exec(
+		query,
+		sql.Named("Status", pedido.Status),
+		sql.Named("ConferidoEm", pedido.ConferidoEm),
+		sql.Named("PedidoID", pedidoID),
+	)
+	if err != nil {
+		return err
+	}
+
+	queryItem := `
+	UPDATE ItensPedidos
+	SET QuantidadeConferida = @QuantidadeConferida
+	WHERE PedidoID = @PedidoID AND Codigo = @Codigo
+`
+	for _, itemRecebido := range pedido.Itens {
+		_, err = tx.Exec(
+			queryItem,
+			sql.Named("QuantidadeConferida", itemRecebido.QuantidadeConferida),
+			sql.Named("PedidoID", pedidoID),
+			sql.Named("Codigo", itemRecebido.Codigo),
+		)
+		if err != nil {
+			return err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}

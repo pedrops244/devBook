@@ -7,7 +7,6 @@ import (
 	"api/src/respostas"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -91,7 +90,6 @@ func ListarPedidos(w http.ResponseWriter, r *http.Request) {
 	pedidos, erro := repositorio.Listar()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
-		fmt.Println(pedidos)
 		return
 	}
 
@@ -139,6 +137,55 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	// Cria o repositório e atualiza os dados
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
 	err = repositorio.AtualizarRecebimento(uint(pedidoID), pedido)
+	if err != nil {
+		respostas.Erro(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Retorna sucesso
+	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Recebimento confirmado com sucesso"})
+}
+
+func ConfirmarConferencia(w http.ResponseWriter, r *http.Request) {
+	// Captura o ID do pedido
+	parametros := mux.Vars(r)
+	pedidoID, err := strconv.ParseUint(parametros["pedidoID"], 10, 64)
+	if err != nil {
+		respostas.Erro(w, http.StatusBadRequest, errors.New("id do pedido inválido"))
+		return
+	}
+
+	// Lê o corpo da requisição
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		respostas.Erro(w, http.StatusUnprocessableEntity, errors.New("erro ao ler o corpo da requisição"))
+		return
+	}
+	defer r.Body.Close()
+
+	// Mapeia os dados recebidos
+	var pedido modelos.Pedido
+	if err := json.Unmarshal(body, &pedido); err != nil {
+		respostas.Erro(w, http.StatusBadRequest, errors.New("dados inválidos"))
+		return
+	}
+
+	if err := pedido.Validar(); err != nil {
+		respostas.Erro(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// Conecta ao banco
+	db, erro := banco.Conectar()
+	if erro != nil {
+		respostas.Erro(w, http.StatusInternalServerError, erro)
+		return
+	}
+	defer db.Close()
+
+	// Cria o repositório e atualiza os dados
+	repositorio := repositorios.NovoRepositorioDePedidos(db)
+	err = repositorio.AtualizarConferencia(uint(pedidoID), pedido)
 	if err != nil {
 		respostas.Erro(w, http.StatusInternalServerError, err)
 		return

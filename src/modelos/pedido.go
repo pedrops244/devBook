@@ -1,7 +1,6 @@
 package modelos
 
 import (
-	"database/sql"
 	"errors"
 	"time"
 )
@@ -10,8 +9,8 @@ type Pedido struct {
 	ID          uint          `json:"id,omitempty"`
 	Status      string        `json:"status,omitempty"`
 	CriadoEm    time.Time     `json:"criadoEm,omitempty"`
-	RecebidoEm  sql.NullTime  `json:"recebidoEm,omitempty"`
-	ConferidoEm sql.NullTime  `json:"conferidoEm,omitempty"`
+	RecebidoEm  *time.Time    `json:"recebidoEm,omitempty"`
+	ConferidoEm *time.Time    `json:"conferidoEm,omitempty"`
 	Itens       []ItensPedido `json:"itens,omitempty"` // Relacionamento com itens
 }
 

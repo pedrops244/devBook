@@ -30,4 +30,10 @@ var rotasPedidos = []Rota{
 		Funcao:             controllers.ConfirmarRecebimento,
 		RequerAutenticacao: true,
 	},
+	{
+		Uri:                "/pedidos/{pedidoID}/conferir-produtos",
+		Metodo:             http.MethodPost,
+		Funcao:             controllers.ConfirmarConferencia,
+		RequerAutenticacao: true,
+	},
 }
