@@ -15,7 +15,7 @@ import (
 func CriarToken(usuarioId uint, role string) (string, error) {
 	permissoes := jwt.MapClaims{}
 	permissoes["authorized"] = true
-	permissoes["exp"] = time.Now().Add(time.Hour * 6).Unix()
+	permissoes["exp"] = time.Now().Add(time.Hour * 24 * 7).Unix()
 	permissoes["usuarioId"] = usuarioId
 	permissoes["role"] = role
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, permissoes)

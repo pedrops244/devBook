@@ -87,7 +87,6 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 	return pedidoID, nil
 }
 
-// BuscarPorID retorna um pedido com seus itens
 func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 	queryPedido := `
 		SELECT ID, Status, CriadoEm
@@ -134,10 +133,9 @@ func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 	return pedido, nil
 }
 
-// Listar retorna todos os pedidos com seus itens
 func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	queryPedidos := `
-		SELECT ID, Status, CriadoEm
+		SELECT ID, Status, CriadoEm, RecebidoEm, ConferidoEm
 		FROM Pedidos
 	`
 	rows, err := repositorio.db.Query(queryPedidos)
@@ -149,7 +147,7 @@ func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	var pedidos []modelos.Pedido
 	for rows.Next() {
 		var pedido modelos.Pedido
-		if err := rows.Scan(&pedido.ID, &pedido.Status, &pedido.CriadoEm); err != nil {
+		if err := rows.Scan(&pedido.ID, &pedido.Status, &pedido.CriadoEm, &pedido.RecebidoEm, &pedido.ConferidoEm); err != nil {
 			return nil, err
 		}
 
@@ -164,7 +162,6 @@ func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	return pedidos, nil
 }
 
-// BuscarItensDoPedido retorna os itens associados a um pedido específico
 func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPedido, error) {
 	query := `
 		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo

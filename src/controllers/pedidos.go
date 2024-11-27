@@ -7,6 +7,7 @@ import (
 	"api/src/respostas"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -90,6 +91,7 @@ func ListarPedidos(w http.ResponseWriter, r *http.Request) {
 	pedidos, erro := repositorio.Listar()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
+		fmt.Println(pedidos)
 		return
 	}
 
