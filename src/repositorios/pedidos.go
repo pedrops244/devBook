@@ -26,9 +26,9 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 
 	// Inserir o pedido
 	queryPedido := `
-		INSERT INTO Pedidos (Status, CriadoEm)
+		INSERT INTO Pedidos (Status, UsuarioId, CriadoEm)
 		OUTPUT INSERTED.ID
-		VALUES (@Status, @CriadoEm)
+		VALUES (@Status, @UsuarioId, @CriadoEm)
 	`
 	stmtPedido, err := tx.Prepare(queryPedido)
 	if err != nil {
@@ -40,6 +40,7 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 	var pedidoID uint
 	err = stmtPedido.QueryRow(
 		sql.Named("Status", pedido.Status),
+		sql.Named("UsuarioId", pedido.UsuarioId),
 		sql.Named("CriadoEm", pedido.CriadoEm),
 	).Scan(&pedidoID)
 	if err != nil {
@@ -89,13 +90,13 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 
 func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 	queryPedido := `
-		SELECT ID, Status, CriadoEm
+		SELECT ID, Status, UsuarioId, CriadoEm
 		FROM Pedidos
 		WHERE ID = @ID
 	`
 	var pedido modelos.Pedido
 	err := repositorio.db.QueryRow(queryPedido, sql.Named("ID", id)).
-		Scan(&pedido.ID, &pedido.Status, &pedido.CriadoEm)
+		Scan(&pedido.ID, &pedido.Status, &pedido.UsuarioId, &pedido.CriadoEm)
 	if err == sql.ErrNoRows {
 		return pedido, errors.New("pedido não encontrado")
 	} else if err != nil {
@@ -135,7 +136,7 @@ func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 
 func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	queryPedidos := `
-		SELECT ID, Status, CriadoEm, RecebidoEm, ConferidoEm
+		SELECT ID, Status, UsuarioId, CriadoEm, RecebidoEm, ConferidoEm
 		FROM Pedidos
 	`
 	rows, err := repositorio.db.Query(queryPedidos)
@@ -147,7 +148,7 @@ func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	var pedidos []modelos.Pedido
 	for rows.Next() {
 		var pedido modelos.Pedido
-		if err := rows.Scan(&pedido.ID, &pedido.Status, &pedido.CriadoEm, &pedido.RecebidoEm, &pedido.ConferidoEm); err != nil {
+		if err := rows.Scan(&pedido.ID, &pedido.Status, &pedido.UsuarioId, &pedido.CriadoEm, &pedido.RecebidoEm, &pedido.ConferidoEm); err != nil {
 			return nil, err
 		}
 

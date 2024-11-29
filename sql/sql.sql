@@ -19,11 +19,11 @@ VALUES ('amigaoadmin', '$2a$10$3KQfTjX69Hu8Xvksp94Z3O7BSZp4ZmLb/NIqqRp8yqMHPomCa
 
 CREATE TABLE Pedidos (
     ID INT IDENTITY PRIMARY KEY,
-    Status NVARCHAR(50) NOT NULL, -- Ex.: 'created', 'received', 'checked'
+    Status NVARCHAR(50) NOT NULL, -- Ex.: 'criado', 'recebido', 'conferido'
+    UsuarioID INT NOT NULL, -- ID do usuário que criou o pedido
     CriadoEm DATETIME DEFAULT GETDATE(), -- Data e hora da criação do pedido
     RecebidoEm DATETIME NULL, -- Data e hora em que o pedido foi recebido
     ConferidoEm DATETIME NULL, -- Data e hora em que o pedido foi conferido
-    UsuarioID INT NOT NULL, -- ID do usuário que criou o pedido
     CONSTRAINT FK_Pedidos_Usuario FOREIGN KEY (UsuarioID) REFERENCES Usuarios(ID)
 );
 

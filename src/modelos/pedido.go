@@ -8,6 +8,7 @@ import (
 type Pedido struct {
 	ID          uint          `json:"id,omitempty"`
 	Status      string        `json:"status,omitempty"`
+	UsuarioId   int           `json:"usuarioId,omitempty"`
 	CriadoEm    time.Time     `json:"criadoEm,omitempty"`
 	RecebidoEm  *time.Time    `json:"recebidoEm,omitempty"`
 	ConferidoEm *time.Time    `json:"conferidoEm,omitempty"`
