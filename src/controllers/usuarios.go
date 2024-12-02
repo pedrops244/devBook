@@ -34,12 +34,11 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-	defer db.Close()
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 	usuario.ID, erro = repositorio.Criar(usuario)
@@ -53,13 +52,11 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 
 func BuscarUsuarios(w http.ResponseWriter, r *http.Request) {
 
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-
-	defer db.Close()
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 	usuarios, erro := repositorio.Buscar()
@@ -108,12 +105,11 @@ func AtualizarUsuario(w http.ResponseWriter, r *http.Request) {
 		respostas.Erro(w, http.StatusBadRequest, erro)
 		return
 	}
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-	defer db.Close()
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 	if erro = repositorio.Atualizar(usuarioID, usuario); erro != nil {
@@ -158,12 +154,11 @@ func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Conectar ao banco e deletar o usuário
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-	defer db.Close()
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 	if erro = repositorio.Deletar(usuarioID); erro != nil {

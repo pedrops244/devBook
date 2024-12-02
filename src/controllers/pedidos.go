@@ -34,12 +34,11 @@ func CriarPedido(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-	defer db.Close()
 
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
 	pedidoID, erro := repositorio.Criar(pedido)
@@ -60,12 +59,11 @@ func BuscarPedido(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-	defer db.Close()
 
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
 	pedido, erro := repositorio.BuscarPorID(uint(pedidoID))
@@ -79,12 +77,11 @@ func BuscarPedido(w http.ResponseWriter, r *http.Request) {
 
 // ListarPedidos retorna todos os pedidos com seus itens
 func ListarPedidos(w http.ResponseWriter, r *http.Request) {
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-	defer db.Close()
 
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
 	pedidos, erro := repositorio.Listar()
@@ -127,12 +124,11 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Conecta ao banco
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-	defer db.Close()
 
 	// Cria o repositório e atualiza os dados
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
@@ -176,12 +172,11 @@ func ConfirmarConferencia(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Conecta ao banco
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-	defer db.Close()
 
 	// Cria o repositório e atualiza os dados
 	repositorio := repositorios.NovoRepositorioDePedidos(db)

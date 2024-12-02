@@ -27,12 +27,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, erro := banco.Conectar()
+	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-	defer db.Close()
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 	usuarioSalvoNoBanco, erro := repositorio.BuscarPorUsername(usuario.Username)
