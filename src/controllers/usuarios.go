@@ -41,6 +41,19 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
+
+	// Verifica se o nome de usuário já existe
+	usuarioExistente, erro := repositorio.BuscarPorUsername(usuario.Username)
+	if erro != nil {
+		respostas.Erro(w, http.StatusInternalServerError, erro)
+		return
+	}
+	if usuarioExistente.ID != 0 {
+		respostas.Erro(w, http.StatusConflict, errors.New("nome de usuário já está em uso"))
+		return
+	}
+
+	// Criação do novo usuário
 	usuario.ID, erro = repositorio.Criar(usuario)
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
