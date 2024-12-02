@@ -175,7 +175,7 @@ func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 	if erro = repositorio.Deletar(usuarioID); erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao remover usuário"))
 		return
 	}
 
