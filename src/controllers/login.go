@@ -8,6 +8,7 @@ import (
 	"api/src/respostas"
 	"api/src/seguranca"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -29,7 +30,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	db, erro := banco.ObterConexao()
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 
