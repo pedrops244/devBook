@@ -37,12 +37,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 	usuarioSalvoNoBanco, erro := repositorio.BuscarPorUsername(usuario.Username)
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("usuário não encontrado, tente novamente"))
 		return
 	}
 
 	if erro = seguranca.VerificarSenha(usuarioSalvoNoBanco.Senha, usuario.Senha); erro != nil {
-		respostas.Erro(w, http.StatusUnauthorized, erro)
+		respostas.Erro(w, http.StatusUnauthorized, errors.New("usuário ou senha incorretos, tente novamente"))
 		return
 	}
 	token, erro := auth.CriarToken(usuarioSalvoNoBanco.ID, usuarioSalvoNoBanco.Role)

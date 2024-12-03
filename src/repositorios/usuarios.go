@@ -3,6 +3,7 @@ package repositorios
 import (
 	"api/src/modelos"
 	"database/sql"
+	"fmt"
 )
 
 type usuarios struct {
@@ -75,10 +76,14 @@ func (repositorio usuarios) BuscarPorUsername(username string) (modelos.Usuario,
 	var usuario modelos.Usuario
 
 	if linha.Next() {
+		// Se houver resultados, faz o scan
 		if erro = linha.Scan(&usuario.ID, &usuario.Senha, &usuario.Role); erro != nil {
 			return modelos.Usuario{}, erro
 		}
+	} else {
+		return modelos.Usuario{}, fmt.Errorf("usuário não encontrado")
 	}
+
 	return usuario, nil
 }
 
