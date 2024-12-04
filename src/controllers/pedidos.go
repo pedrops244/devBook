@@ -89,11 +89,10 @@ func ListarPedidos(w http.ResponseWriter, r *http.Request) {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-
 	respostas.JSON(w, http.StatusOK, pedidos)
 }
 
-// ConfirmarRecebimento atualiza a QuandidadeConferida no banco
+// ConfirmarRecebimento atualiza a QuantidadeRecebida no banco
 func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	// Captura o ID do pedido
 	parametros := mux.Vars(r)
@@ -142,6 +141,7 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Recebimento confirmado com sucesso"})
 }
 
+// ConfirmarConferencia atualiza a QuantidadeConferida no banco
 func ConfirmarConferencia(w http.ResponseWriter, r *http.Request) {
 	// Captura o ID do pedido
 	parametros := mux.Vars(r)

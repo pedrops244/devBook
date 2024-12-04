@@ -3,38 +3,45 @@ package banco
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	_ "github.com/denisenkom/go-mssqldb"
 )
 
-var ConexaoAtual *sql.DB // Variável global para a conexão ativa
+var pool *sql.DB // Variável global para o pool de conexões
 
-// Conectar configura uma nova conexão e armazena na variável global
-func Conectar(stringConexao string) (*sql.DB, error) {
-	db, erro := sql.Open("sqlserver", stringConexao)
-	if erro != nil {
-		log.Printf("Erro ao abrir a conexão com o banco: %v\n", erro)
-		return nil, erro
+// Conectar configura um pool de conexões com os parâmetros fornecidos.
+func Conectar(stringConexao string) error {
+	if pool != nil {
+		pool.Close() // Fecha o pool atual antes de configurar um novo
 	}
 
-	if erro = db.Ping(); erro != nil {
+	db, err := sql.Open("sqlserver", stringConexao)
+	if err != nil {
+		log.Printf("Erro ao abrir a conexão com o banco: %v\n", err)
+		return err
+	}
+
+	// Configura limites do pool
+	db.SetMaxOpenConns(10)                  // Máximo de conexões abertas
+	db.SetMaxIdleConns(5)                   // Máximo de conexões ociosas
+	db.SetConnMaxLifetime(30 * time.Minute) // Tempo máximo de vida das conexões
+
+	if err = db.Ping(); err != nil {
 		db.Close()
-		log.Printf("Erro ao tentar conectar: %v\n", erro)
-		return nil, erro
+		log.Printf("Erro ao tentar conectar: %v\n", err)
+		return err
 	}
 
-	// Fecha a conexão anterior, se existir
-	if ConexaoAtual != nil {
-		ConexaoAtual.Close()
-	}
-
-	ConexaoAtual = db // Define a nova conexão como a ativa
-	return db, nil
+	pool = db
+	log.Println("Pool de conexões configurado com sucesso")
+	return nil
 }
 
+// ObterConexao retorna uma conexão do pool.
 func ObterConexao() (*sql.DB, error) {
-	if ConexaoAtual == nil {
-		return nil, sql.ErrConnDone // Retorna erro se não houver conexão ativa
+	if pool == nil {
+		return nil, sql.ErrConnDone // Erro se o pool ainda não foi configurado
 	}
-	return ConexaoAtual, nil
+	return pool, nil
 }

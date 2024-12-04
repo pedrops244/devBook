@@ -17,14 +17,20 @@ var (
 func Carregar() {
 	var erro error
 
+	// Carrega o arquivo .env
 	if erro = godotenv.Load(); erro != nil {
-		log.Fatal(erro)
+		log.Fatal("Erro ao carregar o arquivo .env", erro)
 	}
 
+	// Carrega a porta da API
 	Porta, erro = strconv.Atoi(os.Getenv("API_PORT"))
 	if erro != nil {
-		Porta = 5000
+		log.Fatal("API_PORT não configurado corretamente no .env")
 	}
 
+	// Carrega a chave secreta do JWT
 	SecretKey = []byte(os.Getenv("JWT_SECRET"))
+	if len(SecretKey) == 0 {
+		log.Fatal("JWT_SECRET não configurado corretamente no .env")
+	}
 }
