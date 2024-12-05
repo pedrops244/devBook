@@ -15,7 +15,7 @@ var rotasPedidos = []Rota{
 	{
 		Uri:                "/pedidos",
 		Metodo:             http.MethodGet,
-		Funcao:             controllers.ListarPedidos,
+		Funcao:             controllers.BuscarPedidos,
 		RequerAutenticacao: true,
 	},
 	{

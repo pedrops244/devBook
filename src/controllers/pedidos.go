@@ -36,7 +36,7 @@ func CriarPedido(w http.ResponseWriter, r *http.Request) {
 
 	db, erro := banco.ObterConexao()
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 
@@ -61,7 +61,7 @@ func BuscarPedido(w http.ResponseWriter, r *http.Request) {
 
 	db, erro := banco.ObterConexao()
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 
@@ -75,11 +75,11 @@ func BuscarPedido(w http.ResponseWriter, r *http.Request) {
 	respostas.JSON(w, http.StatusOK, pedido)
 }
 
-// ListarPedidos retorna todos os pedidos com seus itens
-func ListarPedidos(w http.ResponseWriter, r *http.Request) {
+// BuscarPedidos retorna todos os pedidos com seus itens
+func BuscarPedidos(w http.ResponseWriter, r *http.Request) {
 	db, erro := banco.ObterConexao()
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 
@@ -98,14 +98,14 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	parametros := mux.Vars(r)
 	pedidoID, err := strconv.ParseUint(parametros["pedidoID"], 10, 64)
 	if err != nil {
-		respostas.Erro(w, http.StatusBadRequest, errors.New("id do pedido inválido"))
+		respostas.Erro(w, http.StatusBadRequest, err)
 		return
 	}
 
 	// Lê o corpo da requisição
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		respostas.Erro(w, http.StatusUnprocessableEntity, errors.New("erro ao ler o corpo da requisição"))
+		respostas.Erro(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 	defer r.Body.Close()
@@ -125,7 +125,7 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	// Conecta ao banco
 	db, erro := banco.ObterConexao()
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 
@@ -154,7 +154,7 @@ func ConfirmarConferencia(w http.ResponseWriter, r *http.Request) {
 	// Lê o corpo da requisição
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		respostas.Erro(w, http.StatusUnprocessableEntity, errors.New("erro ao ler o corpo da requisição"))
+		respostas.Erro(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 	defer r.Body.Close()
@@ -174,7 +174,7 @@ func ConfirmarConferencia(w http.ResponseWriter, r *http.Request) {
 	// Conecta ao banco
 	db, erro := banco.ObterConexao()
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 
@@ -187,5 +187,5 @@ func ConfirmarConferencia(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retorna sucesso
-	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Recebimento confirmado com sucesso"})
+	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Conferência confirmada com sucesso"})
 }

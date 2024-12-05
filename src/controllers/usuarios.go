@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// CriarUsuario cria um novo usuário
 func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 	corpoRequest, erro := io.ReadAll(r.Body)
 	if erro != nil {
@@ -35,24 +36,23 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 
 	db, erro := banco.ObterConexao()
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 
-	// Verifica se o nome de usuário já existe
 	usuarioExistente, erro := repositorio.BuscarPorUsername(usuario.Username)
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
-		return
-	}
-	if usuarioExistente.ID != 0 {
+		if erro.Error() != "usuário não encontrado" {
+			respostas.Erro(w, http.StatusInternalServerError, erro)
+			return
+		}
+	} else if usuarioExistente.ID != 0 {
 		respostas.Erro(w, http.StatusConflict, errors.New("nome de usuário já está em uso"))
 		return
 	}
 
-	// Criação do novo usuário
 	usuario.ID, erro = repositorio.Criar(usuario)
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
@@ -62,11 +62,12 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 	respostas.JSON(w, http.StatusCreated, usuario)
 }
 
+// BuscarUsuarios retorna todos os usuários
 func BuscarUsuarios(w http.ResponseWriter, r *http.Request) {
 
 	db, erro := banco.ObterConexao()
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 
@@ -80,6 +81,7 @@ func BuscarUsuarios(w http.ResponseWriter, r *http.Request) {
 	respostas.JSON(w, http.StatusOK, usuarios)
 }
 
+// AtualizarUsuario atualiza o usuário pelo ID
 func AtualizarUsuario(w http.ResponseWriter, r *http.Request) {
 	parametro := mux.Vars(r)
 	usuarioID, erro := strconv.ParseUint(parametro["usuarioId"], 10, 64)
@@ -130,6 +132,7 @@ func AtualizarUsuario(w http.ResponseWriter, r *http.Request) {
 	respostas.JSON(w, http.StatusNoContent, nil)
 }
 
+// DeletarUsuario deleta o usuário pelo ID
 func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
 	parametros := mux.Vars(r)
 	usuarioID, erro := strconv.ParseUint(parametros["usuarioId"], 10, 64)
@@ -146,12 +149,12 @@ func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if roleLogado != "admin" {
-		respostas.Erro(w, http.StatusForbidden, errors.New("apenas administradores podem deletar usuários"))
+	if roleLogado != "admin" && roleLogado != "gerente" {
+		respostas.Erro(w, http.StatusConflict, errors.New("apenas administradores ou gerentes podem deletar usuários"))
 		return
 	}
 
-	// Evitar que o admin delete a si mesmo
+	// Evitar que o admin/gerente delete a si mesmo
 	usuarioLogadoID, erro := auth.ExtrairUsuarioId(r)
 	if erro != nil {
 		respostas.Erro(w, http.StatusUnauthorized, erro)
@@ -159,7 +162,7 @@ func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if usuarioID == usuarioLogadoID {
-		respostas.Erro(w, http.StatusBadRequest, errors.New("você não pode deletar seu próprio usuário"))
+		respostas.Erro(w, http.StatusConflict, errors.New("você não pode deletar seu próprio usuário"))
 		return
 	}
 

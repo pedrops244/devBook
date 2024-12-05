@@ -4,7 +4,6 @@ import (
 	"api/src/modelos"
 	"database/sql"
 	"errors"
-	"fmt"
 )
 
 // pedidos representa o repositório de pedidos
@@ -45,7 +44,6 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 	).Scan(&pedidoID)
 	if err != nil {
 		tx.Rollback()
-		fmt.Println("Erro ao inserir pedido:", err)
 		return 0, err
 	}
 
@@ -58,7 +56,6 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 	stmtItem, err := tx.Prepare(queryItem)
 	if err != nil {
 		tx.Rollback()
-		fmt.Println("Erro ao preparar a query dos itens:", err)
 		return 0, err
 	}
 	defer stmtItem.Close()
@@ -73,14 +70,12 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 		)
 		if err != nil {
 			tx.Rollback()
-			fmt.Println("Erro ao inserir item:", err)
 			return 0, err
 		}
 	}
 
 	// Commit da transação
 	if err := tx.Commit(); err != nil {
-		fmt.Println("Erro ao commit da transação:", err)
 		return 0, err
 	}
 
@@ -88,6 +83,7 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 	return pedidoID, nil
 }
 
+// BuscarPorID busca o pedido pelo ID
 func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 	queryPedido := `
 		SELECT ID, Status, UsuarioId, CriadoEm
@@ -134,6 +130,7 @@ func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 	return pedido, nil
 }
 
+// Listar lista todos os pedidos
 func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	queryPedidos := `
 		SELECT ID, Status, UsuarioId, CriadoEm, RecebidoEm, ConferidoEm
@@ -163,6 +160,7 @@ func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	return pedidos, nil
 }
 
+// BuscarItensDoPedido busca todos os itens dentro de um pedido especifico pelo ID
 func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPedido, error) {
 	query := `
 		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo
@@ -193,6 +191,7 @@ func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPe
 	return itens, nil
 }
 
+// AtualizarRecebimento atualiza a QuantidadeRecebida no banco
 func (repositorio pedidos) AtualizarRecebimento(pedidoID uint, pedido modelos.Pedido) error {
 	tx, err := repositorio.db.Begin()
 	if err != nil {
@@ -244,6 +243,7 @@ func (repositorio pedidos) AtualizarRecebimento(pedidoID uint, pedido modelos.Pe
 	return nil
 }
 
+// AtualizarConferencia atualiza a QuantidadeConferida no banco
 func (repositorio pedidos) AtualizarConferencia(pedidoID uint, pedido modelos.Pedido) error {
 	tx, err := repositorio.db.Begin()
 	if err != nil {

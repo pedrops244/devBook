@@ -37,7 +37,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 	usuarioSalvoNoBanco, erro := repositorio.BuscarPorUsername(usuario.Username)
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, errors.New("usuário não encontrado, tente novamente"))
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("usuário não encontrado ou incorreto, tente novamente"))
 		return
 	}
 
