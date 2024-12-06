@@ -137,7 +137,6 @@ func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
 	parametros := mux.Vars(r)
 	usuarioID, erro := strconv.ParseUint(parametros["usuarioId"], 10, 64)
 	if erro != nil {
-
 		respostas.Erro(w, http.StatusBadRequest, erro)
 		return
 	}
@@ -166,10 +165,9 @@ func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Conectar ao banco e deletar o usuário
 	db, erro := banco.ObterConexao()
 	if erro != nil {
-		respostas.Erro(w, http.StatusInternalServerError, erro)
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 

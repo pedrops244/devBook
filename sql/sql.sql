@@ -36,5 +36,5 @@ CREATE TABLE ItensPedidos (
     QuantidadeSolicitada INT NOT NULL,
     QuantidadeRecebida INT DEFAULT 0, 
     QuantidadeConferida INT DEFAULT 0, 
-    CONSTRAINT FK_ItensPedidos_Pedidos FOREIGN KEY (PedidoID) REFERENCES Pedidos(ID)
+    CONSTRAINT FK_ItensPedidos_Pedidos FOREIGN KEY (PedidoID) REFERENCES Pedidos(ID) ON DELETE CASCADE
 );

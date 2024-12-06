@@ -191,6 +191,36 @@ func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPe
 	return itens, nil
 }
 
+// DeletarPedido remove um pedido pelo ID
+func (repositorio pedidos) DeletarPedido(pedidoID uint) error {
+	tx, err := repositorio.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	query := `
+		DELETE FROM Pedidos
+		WHERE ID = @PedidoID
+	`
+
+	_, err = tx.Exec(query, sql.Named("PedidoID", pedidoID))
+	if err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // AtualizarRecebimento atualiza a QuantidadeRecebida no banco
 func (repositorio pedidos) AtualizarRecebimento(pedidoID uint, pedido modelos.Pedido) error {
 	tx, err := repositorio.db.Begin()

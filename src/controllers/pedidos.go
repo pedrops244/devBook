@@ -92,6 +92,30 @@ func BuscarPedidos(w http.ResponseWriter, r *http.Request) {
 	respostas.JSON(w, http.StatusOK, pedidos)
 }
 
+// DeletarPedido deleta o pedido pelo ID
+func DeletarPedido(w http.ResponseWriter, r *http.Request) {
+	parametros := mux.Vars(r)
+	pedidoID, erro := strconv.ParseUint(parametros["pedidoID"], 10, 64)
+	if erro != nil {
+		respostas.Erro(w, http.StatusBadRequest, erro)
+		return
+	}
+
+	db, erro := banco.ObterConexao()
+	if erro != nil {
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
+		return
+	}
+
+	repositorio := repositorios.NovoRepositorioDePedidos(db)
+	if erro = repositorio.DeletarPedido(uint(pedidoID)); erro != nil {
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao deletar o pedido"))
+		return
+	}
+
+	respostas.JSON(w, http.StatusNoContent, nil)
+}
+
 // ConfirmarRecebimento atualiza a QuantidadeRecebida no banco
 func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	// Captura o ID do pedido

@@ -36,4 +36,10 @@ var rotasPedidos = []Rota{
 		Funcao:             controllers.ConfirmarConferencia,
 		RequerAutenticacao: true,
 	},
+	{
+		Uri:                "/pedidos/{pedidoID}",
+		Metodo:             http.MethodDelete,
+		Funcao:             controllers.DeletarPedido,
+		RequerAutenticacao: true,
+	},
 }
