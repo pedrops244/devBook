@@ -3,7 +3,6 @@ package repositorios
 import (
 	"api/src/modelos"
 	"database/sql"
-	"fmt"
 )
 
 type usuarios struct {
@@ -76,12 +75,9 @@ func (repositorio usuarios) BuscarPorUsername(username string) (modelos.Usuario,
 	var usuario modelos.Usuario
 
 	if linha.Next() {
-		// Se houver resultados, faz o scan
 		if erro = linha.Scan(&usuario.ID, &usuario.Senha, &usuario.Role); erro != nil {
 			return modelos.Usuario{}, erro
 		}
-	} else {
-		return modelos.Usuario{}, fmt.Errorf("usuário não encontrado")
 	}
 
 	return usuario, nil
@@ -140,4 +136,21 @@ func (repositorio usuarios) Deletar(id uint64) error {
 	}
 
 	return nil
+}
+
+func (repositorio usuarios) ObterRoleUsuario(usuarioID uint64) (string, error) {
+	var role string
+
+	linha := repositorio.db.QueryRow(
+		"SELECT role FROM usuarios WHERE id = @id",
+		sql.Named("id", usuarioID),
+	)
+
+	if erro := linha.Scan(&role); erro != nil {
+		if erro == sql.ErrNoRows {
+			return "", erro
+		}
+	}
+
+	return role, nil
 }

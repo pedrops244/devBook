@@ -172,6 +172,18 @@ func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
+
+	roleUsuario, erro := repositorio.ObterRoleUsuario(usuarioID)
+	if erro != nil {
+		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao verificar role do usuário"))
+		return
+	}
+
+	if roleUsuario == "admin" {
+		respostas.Erro(w, http.StatusForbidden, errors.New("não é permitido deletar um usuário administrador"))
+		return
+	}
+
 	if erro = repositorio.Deletar(usuarioID); erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao remover usuário"))
 		return

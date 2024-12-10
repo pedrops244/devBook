@@ -233,6 +233,5 @@ func ConfirmarConferencia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retorna sucesso
 	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Conferência confirmada com sucesso"})
 }
