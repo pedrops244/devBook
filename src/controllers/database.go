@@ -27,5 +27,5 @@ func ConfigurarBanco(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Pool de conexões configurado com sucesso"})
+	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Base de dados conectada com sucesso!"})
 }

@@ -7,6 +7,7 @@ import (
 	"api/src/respostas"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -47,7 +48,7 @@ func CriarPedido(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respostas.JSON(w, http.StatusCreated, map[string]uint{"pedidoID": pedidoID})
+	respostas.JSON(w, http.StatusCreated, map[string]string{"mensagem": fmt.Sprintf("Pedido criado com sucesso! ID: %d", pedidoID)})
 }
 
 // BuscarPedido busca um pedido pelo ID
@@ -118,7 +119,7 @@ func DeletarPedido(w http.ResponseWriter, r *http.Request) {
 
 // ConfirmarRecebimento atualiza a QuantidadeRecebida no banco
 func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
-	// Captura o ID do pedido
+
 	parametros := mux.Vars(r)
 	pedidoID, err := strconv.ParseUint(parametros["pedidoID"], 10, 64)
 	if err != nil {
@@ -126,7 +127,6 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Lê o corpo da requisição
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		respostas.Erro(w, http.StatusUnprocessableEntity, err)
@@ -134,7 +134,6 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Mapeia os dados recebidos
 	var pedido modelos.Pedido
 	if err := json.Unmarshal(body, &pedido); err != nil {
 		respostas.Erro(w, http.StatusBadRequest, errors.New("dados inválidos"))
@@ -146,22 +145,33 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Conecta ao banco
 	db, erro := banco.ObterConexao()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, errors.New("erro ao conectar com o banco de dados"))
 		return
 	}
 
-	// Cria o repositório e atualiza os dados
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
+
+	statusAtual, err := repositorio.VerificarStatus(uint(pedidoID))
+	if err != nil {
+		respostas.Erro(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if statusAtual == "recebido" {
+		respostas.JSON(w, http.StatusConflict, map[string]string{
+			"erro": "Pedido já foi recebido ou está em status não permitido para alteração",
+		})
+		return
+	}
+
 	err = repositorio.AtualizarRecebimento(uint(pedidoID), pedido)
 	if err != nil {
 		respostas.Erro(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	// Retorna sucesso
 	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Recebimento confirmado com sucesso"})
 }
 
@@ -202,8 +212,21 @@ func ConfirmarConferencia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Cria o repositório e atualiza os dados
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
+
+	statusAtual, err := repositorio.VerificarStatus(uint(pedidoID))
+	if err != nil {
+		respostas.Erro(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if statusAtual == "conferido" {
+		respostas.JSON(w, http.StatusConflict, map[string]string{
+			"erro": "Pedido já foi conferido ou está em status não permitido para alteração",
+		})
+		return
+	}
+
 	err = repositorio.AtualizarConferencia(uint(pedidoID), pedido)
 	if err != nil {
 		respostas.Erro(w, http.StatusInternalServerError, err)

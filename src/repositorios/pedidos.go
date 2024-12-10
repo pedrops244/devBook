@@ -323,3 +323,22 @@ func (repositorio pedidos) AtualizarConferencia(pedidoID uint, pedido modelos.Pe
 
 	return nil
 }
+
+// VerificarStatus retorna o status atual do pedido no banco
+func (repositorio pedidos) VerificarStatus(pedidoID uint) (string, error) {
+	query := `
+		SELECT Status
+		FROM Pedidos
+		WHERE ID = @ID
+	`
+
+	var status string
+	err := repositorio.db.QueryRow(query, sql.Named("ID", pedidoID)).Scan(&status)
+	if err == sql.ErrNoRows {
+		return "", errors.New("pedido não encontrado")
+	} else if err != nil {
+		return "", err
+	}
+
+	return status, nil
+}

@@ -59,7 +59,7 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respostas.JSON(w, http.StatusCreated, usuario)
+	respostas.JSON(w, http.StatusCreated, map[string]string{"mensagem": "Usuário criado com sucesso"})
 }
 
 // BuscarUsuarios retorna todos os usuários
