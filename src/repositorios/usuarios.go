@@ -36,7 +36,7 @@ func (repositorio usuarios) Criar(usuario modelos.Usuario) (uint, error) {
 func (repositorio usuarios) Buscar() ([]modelos.Usuario, error) {
 
 	linhas, erro := repositorio.db.Query(
-		"SELECT id, username, role, created_at FROM usuarios",
+		"SELECT id, username, role, created_at, is_deleted FROM usuarios",
 	)
 	if erro != nil {
 		return nil, erro
@@ -53,6 +53,7 @@ func (repositorio usuarios) Buscar() ([]modelos.Usuario, error) {
 			&usuario.Username,
 			&usuario.Role,
 			&usuario.CriadoEm,
+			&usuario.IsDeleted,
 		); erro != nil {
 			return nil, erro
 		}
@@ -168,4 +169,17 @@ func (repositorio usuarios) ExisteUsuarioAdmin() (bool, error) {
 	}
 
 	return exists, nil
+}
+
+func (repositorio usuarios) InativarUsuario(id uint64) error {
+	statement, erro := repositorio.db.Prepare("UPDATE usuarios SET is_deleted = 1 WHERE id = @id")
+	if erro != nil {
+		return erro
+	}
+	defer statement.Close()
+
+	if _, erro = statement.Exec(sql.Named("id", id)); erro != nil {
+		return erro
+	}
+	return nil
 }

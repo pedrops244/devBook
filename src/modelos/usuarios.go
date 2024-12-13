@@ -8,11 +8,12 @@ import (
 )
 
 type Usuario struct {
-	ID       uint      `json:"id,omitempty"`
-	Username string    `json:"username,omitempty"`
-	Senha    string    `json:"senha,omitempty"`
-	Role     string    `json:"role,omitempty"`
-	CriadoEm time.Time `json:"criadoEm,omitempty"`
+	ID        uint      `json:"id,omitempty"`
+	Username  string    `json:"username,omitempty"`
+	Senha     string    `json:"senha,omitempty"`
+	Role      string    `json:"role,omitempty"`
+	CriadoEm  time.Time `json:"criadoEm,omitempty"`
+	IsDeleted bool      `json:"isDeleted"`
 }
 
 func (usuario *Usuario) Preparar(etapa string) error {
