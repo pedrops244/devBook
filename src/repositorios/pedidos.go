@@ -25,9 +25,9 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 
 	// Inserir o pedido
 	queryPedido := `
-		INSERT INTO Pedidos (Status, UsuarioId, CriadoEm)
+		INSERT INTO pedidos (status, usuario_id, criado_em)
 		OUTPUT INSERTED.ID
-		VALUES (@Status, @UsuarioId, @CriadoEm)
+		VALUES (@status, @usuario_id, @criado_em)
 	`
 	stmtPedido, err := tx.Prepare(queryPedido)
 	if err != nil {
@@ -38,9 +38,9 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 
 	var pedidoID uint
 	err = stmtPedido.QueryRow(
-		sql.Named("Status", pedido.Status),
-		sql.Named("UsuarioId", pedido.UsuarioId),
-		sql.Named("CriadoEm", pedido.CriadoEm),
+		sql.Named("status", pedido.Status),
+		sql.Named("usuario_id", pedido.UsuarioId),
+		sql.Named("criado_em", pedido.CriadoEm),
 	).Scan(&pedidoID)
 	if err != nil {
 		tx.Rollback()
@@ -49,9 +49,9 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 
 	// Inserir os itens do pedido
 	queryItem := `
-		INSERT INTO ItensPedidos 
-		(PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo)
-		VALUES (@PedidoID, @QuantidadeSolicitada, @QuantidadeRecebida, @QuantidadeConferida, @Codigo)
+		INSERT INTO itens_pedidos 
+		(pedido_id, quantidade_solicitada, quantidade_recebida, quantidade_conferida, codigo)
+		VALUES (@pedido_id, @quantidade_solicitada, @quantidade_recebida, @quantidade_conferida, @codigo)
 	`
 	stmtItem, err := tx.Prepare(queryItem)
 	if err != nil {
@@ -63,10 +63,10 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 	for _, item := range pedido.Itens {
 		_, err := stmtItem.Exec(
 			sql.Named("PedidoID", pedidoID),
-			sql.Named("QuantidadeSolicitada", item.QuantidadeSolicitada),
-			sql.Named("QuantidadeRecebida", 0),
-			sql.Named("QuantidadeConferida", 0),
-			sql.Named("Codigo", item.Codigo),
+			sql.Named("quantidade_solicitada", item.QuantidadeSolicitada),
+			sql.Named("quantidade_recebida", 0),
+			sql.Named("quantidade_conferida", 0),
+			sql.Named("codigo", item.Codigo),
 		)
 		if err != nil {
 			tx.Rollback()
@@ -86,12 +86,12 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 // BuscarPorID busca o pedido pelo ID
 func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 	queryPedido := `
-		SELECT ID, Status, UsuarioId, CriadoEm
-		FROM Pedidos
-		WHERE ID = @ID
+		SELECT id, status, usuario_id, criado_em
+		FROM pedidos
+		WHERE id = @id
 	`
 	var pedido modelos.Pedido
-	err := repositorio.db.QueryRow(queryPedido, sql.Named("ID", id)).
+	err := repositorio.db.QueryRow(queryPedido, sql.Named("id", id)).
 		Scan(&pedido.ID, &pedido.Status, &pedido.UsuarioId, &pedido.CriadoEm)
 	if err == sql.ErrNoRows {
 		return pedido, errors.New("pedido não encontrado")
@@ -101,11 +101,11 @@ func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 
 	// Buscar os itens associados ao pedido
 	queryItens := `
-		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo
-		FROM ItensPedidos
-		WHERE PedidoID = @PedidoID
+		SELECT id, pedido_id, quantidade_solicitada, quantidade_recebida, quantidade_conferida, codigo
+		FROM itens_pedidos
+		WHERE pedido_id = @pedido_id
 	`
-	rows, err := repositorio.db.Query(queryItens, sql.Named("PedidoID", pedido.ID))
+	rows, err := repositorio.db.Query(queryItens, sql.Named("pedido_id", pedido.ID))
 	if err != nil {
 		return pedido, err
 	}
@@ -133,8 +133,8 @@ func (repositorio pedidos) BuscarPorID(id uint) (modelos.Pedido, error) {
 // Listar lista todos os pedidos
 func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 	queryPedidos := `
-		SELECT ID, Status, UsuarioId, CriadoEm, RecebidoEm, ConferidoEm
-		FROM Pedidos
+		SELECT id, status, usuario_id, criado_em, recebido_em, conferido_em
+		FROM pedidos
 	`
 	rows, err := repositorio.db.Query(queryPedidos)
 	if err != nil {
@@ -163,11 +163,11 @@ func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 // BuscarItensDoPedido busca todos os itens dentro de um pedido especifico pelo ID
 func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPedido, error) {
 	query := `
-		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo
-		FROM ItensPedidos
-		WHERE PedidoID = @PedidoID
+		SELECT id, pedido_id, quantidade_solicitada, quantidade_recebida, quantidade_recebida, codigo
+		FROM itens_pedidos
+		WHERE pedido_id = @pedido_id
 	`
-	rows, err := repositorio.db.Query(query, sql.Named("PedidoID", pedidoID))
+	rows, err := repositorio.db.Query(query, sql.Named("pedido_id", pedidoID))
 	if err != nil {
 		return nil, err
 	}
@@ -205,11 +205,11 @@ func (repositorio pedidos) DeletarPedido(pedidoID uint) error {
 	}()
 
 	query := `
-		DELETE FROM Pedidos
-		WHERE ID = @PedidoID
+		DELETE FROM pedidos
+		WHERE id = @pedido_id
 	`
 
-	_, err = tx.Exec(query, sql.Named("PedidoID", pedidoID))
+	_, err = tx.Exec(query, sql.Named("pedido_id", pedidoID))
 	if err != nil {
 		return err
 	}
@@ -235,32 +235,32 @@ func (repositorio pedidos) AtualizarRecebimento(pedidoID uint, pedido modelos.Pe
 	}()
 
 	query := `
-		UPDATE Pedidos
-		SET Status = @Status, RecebidoEm = @RecebidoEm
-		WHERE ID = @PedidoID
+		UPDATE pedidos
+		SET status = @status, recebido_em = @recebido_em
+		WHERE id = @pedido_id
 	`
 
 	_, err = tx.Exec(
 		query,
-		sql.Named("Status", pedido.Status),
-		sql.Named("RecebidoEm", pedido.RecebidoEm),
-		sql.Named("PedidoID", pedidoID),
+		sql.Named("status", pedido.Status),
+		sql.Named("recebido_em", pedido.RecebidoEm),
+		sql.Named("pedido_id", pedidoID),
 	)
 	if err != nil {
 		return err
 	}
 
 	queryItem := `
-	UPDATE ItensPedidos
-	SET QuantidadeRecebida = @QuantidadeRecebida
-	WHERE PedidoID = @PedidoID AND Codigo = @Codigo
+	UPDATE itens_pedidos
+	SET quantidade_recebida = @quantidade_recebida
+	WHERE pedido_id = @pedido_id AND codigo = @codigo
 `
 	for _, itemRecebido := range pedido.Itens {
 		_, err = tx.Exec(
 			queryItem,
-			sql.Named("QuantidadeRecebida", itemRecebido.QuantidadeRecebida),
-			sql.Named("PedidoID", pedidoID),
-			sql.Named("Codigo", itemRecebido.Codigo),
+			sql.Named("quantidade_recebida", itemRecebido.QuantidadeRecebida),
+			sql.Named("pedido_id", pedidoID),
+			sql.Named("codigo", itemRecebido.Codigo),
 		)
 		if err != nil {
 			return err
@@ -287,31 +287,31 @@ func (repositorio pedidos) AtualizarConferencia(pedidoID uint, pedido modelos.Pe
 	}()
 
 	query := `
-		UPDATE Pedidos
-		SET Status = @Status, ConferidoEm = @ConferidoEm
-		WHERE ID = @PedidoID
+		UPDATE pedidos
+		SET status = @status, conferido_em = @conferido_em
+		WHERE id = @pedido_id
 	`
 	_, err = tx.Exec(
 		query,
-		sql.Named("Status", pedido.Status),
-		sql.Named("ConferidoEm", pedido.ConferidoEm),
-		sql.Named("PedidoID", pedidoID),
+		sql.Named("status", pedido.Status),
+		sql.Named("conferido_em", pedido.ConferidoEm),
+		sql.Named("pedido_id", pedidoID),
 	)
 	if err != nil {
 		return err
 	}
 
 	queryItem := `
-	UPDATE ItensPedidos
-	SET QuantidadeConferida = @QuantidadeConferida
-	WHERE PedidoID = @PedidoID AND Codigo = @Codigo
+	UPDATE itens_pedidos
+	SET quantidade_conferida = @quantidade_conferida
+	WHERE pedido_id = @pedido_id AND codigo = @codigo
 `
 	for _, itemRecebido := range pedido.Itens {
 		_, err = tx.Exec(
 			queryItem,
-			sql.Named("QuantidadeConferida", itemRecebido.QuantidadeConferida),
-			sql.Named("PedidoID", pedidoID),
-			sql.Named("Codigo", itemRecebido.Codigo),
+			sql.Named("quantidade_conferida", itemRecebido.QuantidadeConferida),
+			sql.Named("pedido_id", pedidoID),
+			sql.Named("codigo", itemRecebido.Codigo),
 		)
 		if err != nil {
 			return err
@@ -327,13 +327,13 @@ func (repositorio pedidos) AtualizarConferencia(pedidoID uint, pedido modelos.Pe
 // VerificarStatus retorna o status atual do pedido no banco
 func (repositorio pedidos) VerificarStatus(pedidoID uint) (string, error) {
 	query := `
-		SELECT Status
-		FROM Pedidos
-		WHERE ID = @ID
+		SELECT status
+		FROM pedidos
+		WHERE id = @id
 	`
 
 	var status string
-	err := repositorio.db.QueryRow(query, sql.Named("ID", pedidoID)).Scan(&status)
+	err := repositorio.db.QueryRow(query, sql.Named("id", pedidoID)).Scan(&status)
 	if err == sql.ErrNoRows {
 		return "", errors.New("pedido não encontrado")
 	} else if err != nil {

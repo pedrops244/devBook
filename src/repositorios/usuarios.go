@@ -154,3 +154,18 @@ func (repositorio usuarios) ObterRoleUsuario(usuarioID uint64) (string, error) {
 
 	return role, nil
 }
+
+func (repositorio usuarios) ExisteUsuarioAdmin() (bool, error) {
+	var exists bool
+
+	linha := repositorio.db.QueryRow(
+		"SELECT CASE WHEN EXISTS (SELECT 1 FROM usuarios WHERE role = @role) THEN 1 ELSE 0 END",
+		sql.Named("role", "admin"),
+	)
+
+	if erro := linha.Scan(&exists); erro != nil {
+		return false, erro
+	}
+
+	return exists, nil
+}

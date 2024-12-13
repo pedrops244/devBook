@@ -53,6 +53,17 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	adminExistente, erro := repositorio.ExisteUsuarioAdmin()
+	if erro != nil {
+		respostas.Erro(w, http.StatusInternalServerError, erro)
+		return
+	}
+
+	if adminExistente {
+		respostas.Erro(w, http.StatusConflict, errors.New("já existe um administrador no sistema"))
+		return
+	}
+
 	usuario.ID, erro = repositorio.Criar(usuario)
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)

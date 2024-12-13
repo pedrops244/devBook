@@ -19,10 +19,10 @@ func NovoRepositorioDeItensPedidos(db *sql.DB) *itensPedidos {
 // Adicionar adiciona um item ao pedido
 func (repositorio itensPedidos) Adicionar(item modelos.ItensPedido) (int64, error) {
 	query := `
-		INSERT INTO ItensPedidos 
-		(PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo)
+		INSERT INTO itens_pedidos 
+		(pedido_id, quantidade_solicitada, quantidade_recebida, quantidade_conferida, codigo)
 		OUTPUT INSERTED.ID
-		VALUES (@PedidoID, @QuantidadeSolicitada, 0, 0, @Codigo)
+		VALUES (@pedido_id, @quantidade_solicitada, 0, 0, @codigo)
 	`
 	stmt, err := repositorio.db.Prepare(query)
 	if err != nil {
@@ -32,9 +32,9 @@ func (repositorio itensPedidos) Adicionar(item modelos.ItensPedido) (int64, erro
 
 	var id int64
 	err = stmt.QueryRow(
-		sql.Named("PedidoID", item.PedidoID),
-		sql.Named("QuantidadeSolicitada", item.QuantidadeSolicitada),
-		sql.Named("Codigo", item.Codigo),
+		sql.Named("pedido_id", item.PedidoID),
+		sql.Named("quantidade_solicitada", item.QuantidadeSolicitada),
+		sql.Named("codigo", item.Codigo),
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -45,11 +45,11 @@ func (repositorio itensPedidos) Adicionar(item modelos.ItensPedido) (int64, erro
 // BuscarPorPedido retorna todos os itens associados a um pedido
 func (repositorio itensPedidos) BuscarPorPedido(pedidoID uint) ([]modelos.ItensPedido, error) {
 	query := `
-		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo
-		FROM ItensPedidos
-		WHERE PedidoID = @PedidoID
+		SELECT id, pedido_id, quantidade_solicitada, quantidade_recebida, quantidade_conferida, codigo
+		FROM itens_pedidos
+		WHERE pedido_id = @pedido_id
 	`
-	rows, err := repositorio.db.Query(query, sql.Named("PedidoID", pedidoID))
+	rows, err := repositorio.db.Query(query, sql.Named("pedido_id", pedidoID))
 	if err != nil {
 		return nil, err
 	}
@@ -76,12 +76,12 @@ func (repositorio itensPedidos) BuscarPorPedido(pedidoID uint) ([]modelos.ItensP
 // BuscarPorID busca um item específico pelo ID
 func (repositorio itensPedidos) BuscarPorID(itemID uint) (modelos.ItensPedido, error) {
 	query := `
-		SELECT ID, PedidoID, QuantidadeSolicitada, QuantidadeRecebida, QuantidadeConferida, Codigo
-		FROM ItensPedidos
-		WHERE ID = @ItemID
+		SELECT id, pedido_id, quantidade_solicitada, quantidade_recebida, quantidade_conferida, codigo
+		FROM itens_pedidos
+		WHERE id = @item_id
 	`
 	var item modelos.ItensPedido
-	err := repositorio.db.QueryRow(query, sql.Named("ItemID", itemID)).
+	err := repositorio.db.QueryRow(query, sql.Named("item_id", itemID)).
 		Scan(
 			&item.ID,
 			&item.PedidoID,
