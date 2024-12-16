@@ -62,7 +62,7 @@ func (repositorio pedidos) Criar(pedido modelos.Pedido) (uint, error) {
 
 	for _, item := range pedido.Itens {
 		_, err := stmtItem.Exec(
-			sql.Named("PedidoID", pedidoID),
+			sql.Named("pedido_id", pedidoID),
 			sql.Named("quantidade_solicitada", item.QuantidadeSolicitada),
 			sql.Named("quantidade_recebida", 0),
 			sql.Named("quantidade_conferida", 0),
@@ -163,7 +163,7 @@ func (repositorio pedidos) Listar() ([]modelos.Pedido, error) {
 // BuscarItensDoPedido busca todos os itens dentro de um pedido especifico pelo ID
 func (repositorio pedidos) BuscarItensDoPedido(pedidoID uint) ([]modelos.ItensPedido, error) {
 	query := `
-		SELECT id, pedido_id, quantidade_solicitada, quantidade_recebida, quantidade_recebida, codigo
+		SELECT id, pedido_id, quantidade_solicitada, quantidade_recebida, quantidade_conferida, codigo
 		FROM itens_pedidos
 		WHERE pedido_id = @pedido_id
 	`

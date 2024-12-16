@@ -35,6 +35,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
+	isDeleted, _ := repositorio.IsDeleted(usuario.Username)
+	if isDeleted {
+		respostas.Erro(w, http.StatusUnauthorized, errors.New("o usuário está inativado, contate um administrador"))
+		return
+	}
+
 	usuarioSalvoNoBanco, erro := repositorio.BuscarPorUsername(usuario.Username)
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, errors.New("usuário não encontrado ou incorreto, tente novamente"))
