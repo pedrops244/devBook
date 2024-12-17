@@ -175,7 +175,7 @@ func (repositorio usuarios) IsDeleted(username string) (bool, error) {
 	var isDeleted bool
 
 	linha := repositorio.db.QueryRow(
-		"select is_deleted from usuarios where is_deleted = 1 and username = @username",
+		"SELECT is_deleted FROM usuarios WHERE is_deleted = 1 AND username = @username",
 		sql.Named("username", username),
 	)
 	if erro := linha.Scan(&isDeleted); erro != nil {
@@ -183,6 +183,7 @@ func (repositorio usuarios) IsDeleted(username string) (bool, error) {
 	}
 	return isDeleted, nil
 }
+
 func (repositorio usuarios) InativarUsuario(id uint64) error {
 	statement, erro := repositorio.db.Prepare("UPDATE usuarios SET is_deleted = 1 WHERE id = @id")
 	if erro != nil {

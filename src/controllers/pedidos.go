@@ -42,6 +42,29 @@ func CriarPedido(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
+	repositorioEstoque := repositorios.NovoRepositorioDeEstoque(db)
+
+	// Verifica se há estoque disponível para cada item do pedido
+	for _, item := range pedido.Itens {
+		estoqueDisponivel, err := repositorioEstoque.ObterEstoqueDisponivel(item.Codigo)
+		if err != nil {
+			respostas.Erro(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		if item.QuantidadeSolicitada > estoqueDisponivel {
+			respostas.Erro(w, http.StatusConflict, errors.New("estoque insuficiente para o produto: "+item.Codigo))
+			return
+		}
+
+		// Reserva o item no estoque
+		if err := repositorioEstoque.ReservarItens(item.Codigo, item.QuantidadeSolicitada); err != nil {
+			respostas.Erro(w, http.StatusInternalServerError, errors.New("estoque insuficiente para a reserva"))
+			return
+		}
+	}
+
+	// Cria o pedido no banco de dados
 	pedidoID, erro := repositorio.Criar(pedido)
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
@@ -119,7 +142,6 @@ func DeletarPedido(w http.ResponseWriter, r *http.Request) {
 
 // ConfirmarRecebimento atualiza a QuantidadeRecebida no banco
 func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
-
 	parametros := mux.Vars(r)
 	pedidoID, err := strconv.ParseUint(parametros["pedidoID"], 10, 64)
 	if err != nil {
@@ -152,7 +174,9 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repositorio := repositorios.NovoRepositorioDePedidos(db)
+	repositorioEstoque := repositorios.NovoRepositorioDeEstoque(db)
 
+	// Verifica o status atual do pedido
 	statusAtual, err := repositorio.VerificarStatus(uint(pedidoID))
 	if err != nil {
 		respostas.Erro(w, http.StatusInternalServerError, err)
@@ -166,10 +190,20 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Atualiza a quantidade recebida no pedido
 	err = repositorio.AtualizarRecebimento(uint(pedidoID), pedido)
 	if err != nil {
 		respostas.Erro(w, http.StatusInternalServerError, err)
 		return
+	}
+
+	// Confirmar a saída do estoque, efetivando a redução
+	for _, item := range pedido.Itens {
+		err := repositorioEstoque.ConfirmarSaida(item.Codigo, item.QuantidadeRecebida)
+		if err != nil {
+			respostas.Erro(w, http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Recebimento confirmado com sucesso"})
@@ -177,7 +211,6 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 
 // ConfirmarConferencia atualiza a QuantidadeConferida no banco
 func ConfirmarConferencia(w http.ResponseWriter, r *http.Request) {
-	// Captura o ID do pedido
 	parametros := mux.Vars(r)
 	pedidoID, err := strconv.ParseUint(parametros["pedidoID"], 10, 64)
 	if err != nil {

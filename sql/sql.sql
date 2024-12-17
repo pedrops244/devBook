@@ -48,3 +48,12 @@ CREATE TABLE itens_pedidos (
     quantidade_conferida INT DEFAULT 0, 
     CONSTRAINT FK_itens_pedidos_pedidos FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE
 );
+
+CREATE TABLE estoque (
+    id INT IDENTITY PRIMARY KEY,
+    codigo NVARCHAR(50) NOT NULL UNIQUE, -- Código único do produto
+    quantidade INT NOT NULL,            -- Quantidade total no estoque
+    reservado INT DEFAULT 0,            -- Quantidade reservada para pedidos
+    faltas INT DEFAULT 0,            -- Quantidade em falta para pedidos
+    criado_em DATETIME DEFAULT GETDATE(), -- Data de criação
+);

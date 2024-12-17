@@ -1,17 +1,7 @@
-insert into usuarios (nome, nick, email, senha)
-values
-("Usuário 1", "usuario_1", "usuario1@gmail.com", "$2a$10$0iGYlKCAYTyJV/vC6nLGgeWFwD6AhSkWLsVRO/.M4lNK8OtIkfggy"), -- usuario1
-("Usuário 2", "usuario_2", "usuario2@gmail.com", "$2a$10$0iGYlKCAYTyJV/vC6nLGgeWFwD6AhSkWLsVRO/.M4lNK8OtIkfggy"), -- usuario2
-("Usuário 3", "usuario_3", "usuario3@gmail.com", "$2a$10$0iGYlKCAYTyJV/vC6nLGgeWFwD6AhSkWLsVRO/.M4lNK8OtIkfggy"); -- usuario3
-
-insert into seguidores(usuario_id, seguidor_id)
-values
-(1, 2),
-(3, 1),
-(1, 3);
-
-insert into publicacoes(titulo, conteudo, autor_id)
-values
-("Publicação do Usuário 1", "Essa é a publicação do usuário 1! Oba!", 1),
-("Publicação do Usuário 2", "Essa é a publicação do usuário 2! Oba!", 2),
-("Publicação do Usuário 3", "Essa é a publicação do usuário 3! Oba!", 3);
+INSERT INTO Estoque (Codigo, Quantidade, Reservado, Faltas) 
+VALUES 
+('2121', 30, 0, 0),
+('7898738873200', 20, 0, 0),
+('7899808887073', 10, 0, 0),
+('7894900509304', 15, 0, 0),
+('7896452833227', 18, 0, 0);
