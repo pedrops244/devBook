@@ -11,6 +11,7 @@ type ItensPedido struct {
 	QuantidadeRecebida   int    `json:"quantidadeRecebida,omitempty"`
 	QuantidadeConferida  int    `json:"quantidadeConferida,omitempty"`
 	Codigo               string `json:"codigo,omitempty"`
+	IsInsufficientStock  bool   `json:"isInsufficientStock"`
 }
 
 func (item *ItensPedido) Preparar() error {

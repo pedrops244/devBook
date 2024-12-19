@@ -190,21 +190,58 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Atualiza a quantidade recebida no pedido
-	err = repositorio.AtualizarRecebimento(uint(pedidoID), pedido)
-	if err != nil {
-		respostas.Erro(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	// Confirmar a saída do estoque, efetivando a redução
+	// Processar cada item do pedido
 	for _, item := range pedido.Itens {
-		err := repositorioEstoque.ConfirmarSaida(item.Codigo, item.QuantidadeRecebida)
+		estoqueDisponivel, err := repositorioEstoque.ObterEstoqueDisponivel(item.Codigo)
+		if err != nil {
+			respostas.Erro(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		// Caso não tenha marcado a flag, tratamos a lógica de sobra e recebimento
+		if item.QuantidadeRecebida > estoqueDisponivel {
+			respostas.Erro(w, http.StatusConflict, errors.New(
+				"quantidade recebida maior que o estoque disponível para o produto: "+item.Codigo,
+			))
+			return
+		}
+
+		sobraNegativo := item.QuantidadeRecebida - item.QuantidadeSolicitada
+		// Verifica se o checkbox da flag IsInsufficientStock foi marcado
+		if item.IsInsufficientStock {
+			// Se flag foi marcada, zera o estoque físico
+			err := repositorioEstoque.ZerarEstoque(item.Codigo, sobraNegativo)
+			if err != nil {
+				respostas.Erro(w, http.StatusInternalServerError, err)
+				return
+			}
+			continue // Não tenta mais confirmar a saída para este item
+		}
+		// Se houver sobra, devolve ao estoque
+		sobra := item.QuantidadeSolicitada - item.QuantidadeRecebida
+		fmt.Println(sobra)
+		if sobra > 0 {
+			err := repositorioEstoque.DevolverSobraEstoque(item.Codigo, sobra)
+			if err != nil {
+				respostas.Erro(w, http.StatusInternalServerError, err)
+				return
+			}
+		}
+
+		// Confirma a saída do estoque
+		err = repositorioEstoque.ConfirmarSaida(item.Codigo, item.QuantidadeRecebida)
 		if err != nil {
 			respostas.Erro(w, http.StatusInternalServerError, err)
 			return
 		}
 	}
+
+	// Atualiza o recebimento no pedido
+	// err = repositorio.AtualizarRecebimento(uint(pedidoID), pedido)
+	// if err != nil {
+	// 	respostas.Erro(w, http.StatusInternalServerError, err)
+	// 	return
+	// }
 
 	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Recebimento confirmado com sucesso"})
 }

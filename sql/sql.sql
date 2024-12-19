@@ -44,6 +44,7 @@ CREATE TABLE itens_pedidos (
     pedido_id INT NOT NULL, -- Relacionamento com a tabela Pedidos
     codigo NVARCHAR(50) NOT NULL, -- Código de barras do produto
     quantidade_solicitada INT NOT NULL,
+    is_insufficient_stock BIT DEFAULT 0;
     quantidade_recebida INT DEFAULT 0, 
     quantidade_conferida INT DEFAULT 0, 
     CONSTRAINT FK_itens_pedidos_pedidos FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE
