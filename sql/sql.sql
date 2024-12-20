@@ -32,6 +32,8 @@ CREATE TABLE pedidos (
     id INT IDENTITY PRIMARY KEY,
     status NVARCHAR(50) NOT NULL, -- Ex.: 'criado', 'recebido', 'conferido'
     usuario_id INT NOT NULL, -- ID do usuário que criou o pedido
+    repositor_id INT DEFAULT 0, -- ID do usuário que criou o pedido
+    conferente_id INT DEFAULT 0, -- ID do usuário que criou o pedido
     criado_em DATETIME DEFAULT GETDATE(), -- Data e hora da criação do pedido
     recebido_em DATETIME NULL, -- Data e hora em que o pedido foi recebido
     conferido_em DATETIME NULL, -- Data e hora em que o pedido foi conferido
