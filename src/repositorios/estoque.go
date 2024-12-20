@@ -72,7 +72,7 @@ func (repositorio estoque) DevolverSobraEstoque(codigo string, sobra int) error 
 func (repositorio estoque) ZerarEstoque(codigo string, sobra int) error {
 	query := `
         UPDATE estoque
-        SET quantidade = 0, reservado = 0, faltas = @sobra
+        SET quantidade = 0, reservado = 0, faltas = faltas + @sobra
         WHERE codigo = @codigo
     `
 	_, err := repositorio.db.Exec(query, sql.Named("codigo", codigo), sql.Named("sobra", sobra))

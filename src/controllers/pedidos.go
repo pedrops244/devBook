@@ -192,19 +192,6 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 
 	// Processar cada item do pedido
 	for _, item := range pedido.Itens {
-		estoqueDisponivel, err := repositorioEstoque.ObterEstoqueDisponivel(item.Codigo)
-		if err != nil {
-			respostas.Erro(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		// Caso não tenha marcado a flag, tratamos a lógica de sobra e recebimento
-		if item.QuantidadeRecebida > estoqueDisponivel {
-			respostas.Erro(w, http.StatusConflict, errors.New(
-				"quantidade recebida maior que o estoque disponível para o produto: "+item.Codigo,
-			))
-			return
-		}
 
 		sobraNegativo := item.QuantidadeRecebida - item.QuantidadeSolicitada
 		// Verifica se o checkbox da flag IsInsufficientStock foi marcado
@@ -237,11 +224,11 @@ func ConfirmarRecebimento(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Atualiza o recebimento no pedido
-	// err = repositorio.AtualizarRecebimento(uint(pedidoID), pedido)
-	// if err != nil {
-	// 	respostas.Erro(w, http.StatusInternalServerError, err)
-	// 	return
-	// }
+	err = repositorio.AtualizarRecebimento(uint(pedidoID), pedido)
+	if err != nil {
+		respostas.Erro(w, http.StatusInternalServerError, err)
+		return
+	}
 
 	respostas.JSON(w, http.StatusOK, map[string]string{"mensagem": "Recebimento confirmado com sucesso"})
 }
