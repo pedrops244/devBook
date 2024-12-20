@@ -6,13 +6,15 @@ import (
 )
 
 type Pedido struct {
-	ID          uint          `json:"id,omitempty"`
-	Status      string        `json:"status,omitempty"`
-	UsuarioId   int           `json:"usuarioId,omitempty"`
-	CriadoEm    time.Time     `json:"criadoEm,omitempty"`
-	RecebidoEm  *time.Time    `json:"recebidoEm,omitempty"`
-	ConferidoEm *time.Time    `json:"conferidoEm,omitempty"`
-	Itens       []ItensPedido `json:"itens,omitempty"` // Relacionamento com itens
+	ID           uint          `json:"id,omitempty"`
+	Status       string        `json:"status,omitempty"`
+	UsuarioId    int           `json:"usuarioId,omitempty"`
+	RepositorId  int           `json:"repositorId,omitempty"`
+	ConferenteId int           `json:"conferenteId,omitempty"`
+	CriadoEm     time.Time     `json:"criadoEm,omitempty"`
+	RecebidoEm   *time.Time    `json:"recebidoEm,omitempty"`
+	ConferidoEm  *time.Time    `json:"conferidoEm,omitempty"`
+	Itens        []ItensPedido `json:"itens,omitempty"` // Relacionamento com itens
 }
 
 func (pedido *Pedido) Validar() error {

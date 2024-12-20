@@ -236,7 +236,7 @@ func (repositorio pedidos) AtualizarRecebimento(pedidoID uint, pedido modelos.Pe
 
 	query := `
 		UPDATE pedidos
-		SET status = @status, recebido_em = @recebido_em
+		SET status = @status, recebido_em = @recebido_em, repositor_id = @repositor_id
 		WHERE id = @pedido_id
 	`
 
@@ -244,6 +244,7 @@ func (repositorio pedidos) AtualizarRecebimento(pedidoID uint, pedido modelos.Pe
 		query,
 		sql.Named("status", pedido.Status),
 		sql.Named("recebido_em", pedido.RecebidoEm),
+		sql.Named("repositor_id", pedido.RepositorId),
 		sql.Named("pedido_id", pedidoID),
 	)
 	if err != nil {
@@ -288,13 +289,14 @@ func (repositorio pedidos) AtualizarConferencia(pedidoID uint, pedido modelos.Pe
 
 	query := `
 		UPDATE pedidos
-		SET status = @status, conferido_em = @conferido_em
+		SET status = @status, conferido_em = @conferido_em, conferente_id = @conferente_id
 		WHERE id = @pedido_id
 	`
 	_, err = tx.Exec(
 		query,
 		sql.Named("status", pedido.Status),
 		sql.Named("conferido_em", pedido.ConferidoEm),
+		sql.Named("conferente_id", pedido.ConferenteId),
 		sql.Named("pedido_id", pedidoID),
 	)
 	if err != nil {

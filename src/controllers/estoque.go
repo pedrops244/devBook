@@ -60,6 +60,5 @@ func VerificarProduto(w http.ResponseWriter, r *http.Request) {
 		"codigo":            produto.Codigo,
 		"quantidadePedido":  produto.Quantidade,
 		"quantidadeEstoque": estoqueDisponivel,
-		"mensagem":          "Produto validado com sucesso",
 	})
 }
